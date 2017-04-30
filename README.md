@@ -1,29 +1,38 @@
-RxMVP Example
+RxMV(Something*) Example
 =============
 
-Showcases a reactive MVP approach via a 'Show Weather Forecast' example.
+Showcases a reactive MVP based architecture via a 'Show Weather Forecast' example.
+Originally forked from [RxMVP][rxmvp].
 
-Contains examples both in [RxJava 1.x][rxjava1] and [RxJava 2.x][rxjava2]:
- - [rxjava-1.x][rxjava-1.x] branch contains an example using RxJava 1.x
- - [rxjava-2.x][rxjava-2.x] branch contains an example using RxJava 2.x
+The project uses [Kotlin][kotlin], but the examples showcased here can be translated to Java.
 
 ## Project Structure
 
-The projects consists of tree source containers:
-* `src/main/` - contains project code
-* `src/test/` - contains unit tests for business logic
-* `src/androidTest` - contains functional ui tests
+**TBD**
 
-The main code can be divided into the following "layers":
-* `data` - configuration of the network component + java representation of the response.
-* `di` - configuration of the applications global injector (dependency graph).
-* `rx` - declaration of the RxModule, basically a scheduler provider.
-* `show.forecast` - user facing feature, designed following the MVP pattern.
+## Purpose
 
-##
+Created for a series of articles and talks.
 
-Created for a tech talk **MVP & RxJava 2.0** in collaboration with [@vanniktech](https://github.com/vanniktech).
+## Licence
 
+    Copyright 2017 Serj Lotutovici
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+
+[kotlin]: https://kotlinlang.org/
+[rxmvp]: https://github.com/serj-lotutovici/RxMVP
 [rxjava1]: https://github.com/ReactiveX/RxJava/tree/1.x
 [rxjava2]: https://github.com/ReactiveX/RxJava/tree/2.x
 [rxjava-1.x]: https://github.com/serj-lotutovici/RxMVP/tree/rxjava-1.x
