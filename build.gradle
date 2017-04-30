@@ -1,17 +1,14 @@
 buildscript {
+  apply from: rootProject.file('dependencies.gradle')
+
   repositories {
-    mavenCentral()
-    jcenter()
-  }
-  dependencies {
-    classpath 'com.android.tools.build:gradle:2.3.1'
-    classpath 'com.neenbedankt.gradle.plugins:android-apt:1.8'
-    classpath 'me.tatarka:gradle-retrolambda:3.2.5'
-    classpath 'me.tatarka.retrolambda.projectlombok:lombok.ast:0.2.3.a2'
+    maven { url "https://plugins.gradle.org/m2/" }
   }
 
-  // Exclude the lombok version that the android plugin depends on.
-  configurations.classpath.exclude group: 'com.android.tools.external.lombok'
+  dependencies {
+    classpath usedPlugins.android
+    classpath usedPlugins.kotlin
+  }
 }
 
 allprojects {
@@ -19,6 +16,11 @@ allprojects {
     mavenCentral()
     jcenter()
   }
+}
+
+/* Apply used library constants to all modules. */
+subprojects {
+  apply from: rootProject.file('dependencies.gradle')
 }
 
 task clean(type: Delete) {

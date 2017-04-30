@@ -1,14 +1,15 @@
 package com.serjltt.devfest.weather.show.forecast.presenter;
 
 import com.serjltt.devfest.weather.mvp.Presenter;
-import com.serjltt.devfest.weather.rx.RxUseCase;
 import com.serjltt.devfest.weather.show.forecast.ForecastMvp;
+import com.serjltt.devfest.weather.show.forecast.usecase.GetForecastUseCase;
 import io.reactivex.Observable;
 import io.reactivex.schedulers.TestScheduler;
 import io.reactivex.subjects.BehaviorSubject;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.Callable;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -23,7 +24,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 public final class ForecastPresenterTest {
-  @Mock RxUseCase<List<ForecastMvp.Model>, String> useCase;
+  @Mock GetForecastUseCase useCase;
   @Mock ForecastMvp.View view;
 
   private TestScheduler testScheduler;
@@ -41,9 +42,12 @@ public final class ForecastPresenterTest {
   }
 
   @Test public void propagatesError() throws Exception {
-    when(useCase.stream(anyString())).thenReturn(Observable.fromCallable(() -> {
-      throw new IOException("Error");
-    }));
+    when(useCase.getForecast(anyString())).thenReturn(
+        Observable.fromCallable(new Callable<List<ForecastMvp.Model>>() {
+          @Override public List<ForecastMvp.Model> call() throws Exception {
+            throw new IOException("Error");
+          }
+        }));
 
     presenter.bind(view);
     triggerEvent("test");
@@ -54,9 +58,13 @@ public final class ForecastPresenterTest {
   }
 
   @Test public void propagatesSuccess() throws Exception {
-    ForecastMvp.Model oneForecast = mock(ForecastMvp.Model.class);
-    when(useCase.stream(anyString())).thenReturn(
-        Observable.fromCallable(() -> Collections.singletonList(oneForecast)));
+    final ForecastMvp.Model oneForecast = mock(ForecastMvp.Model.class);
+    when(useCase.getForecast(anyString())).thenReturn(
+        Observable.fromCallable(new Callable<List<ForecastMvp.Model>>() {
+          @Override public List<ForecastMvp.Model> call() throws Exception {
+            return Collections.singletonList(oneForecast);
+          }
+        }));
 
     presenter.bind(view);
     triggerEvent("test1");
@@ -68,11 +76,14 @@ public final class ForecastPresenterTest {
   }
 
   @Test public void doesNotPropagateIfUnsubscribed() throws Exception {
-    when(useCase.stream(anyString())).thenReturn(
-        Observable.fromCallable(Collections::emptyList));
+    when(useCase.getForecast(anyString())).thenReturn(
+        Observable.fromCallable(new Callable<List<ForecastMvp.Model>>() {
+          @Override public List<ForecastMvp.Model> call() throws Exception {
+            return Collections.emptyList();
+          }
+        }));
 
-    presenter.bind(view)
-        .dispose();
+    presenter.bind(view).dispose();
     triggerEvent("test1");
 
     verify(view, never()).showLoading();

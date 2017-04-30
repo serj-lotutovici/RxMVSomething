@@ -1,31 +1,25 @@
+apply plugin: 'idea'
 apply plugin: 'com.android.application'
-apply plugin: 'com.neenbedankt.android-apt'
-apply plugin: 'me.tatarka.retrolambda'
-
-retrolambda {
-  jvmArgs '-noverify'
-  javaVersion JavaVersion.VERSION_1_6
-  defaultMethods false
-  incremental true
-}
+apply plugin: 'org.jetbrains.kotlin.android'
+apply plugin: 'org.jetbrains.kotlin.kapt'
 
 android {
-  compileSdkVersion 24
-  buildToolsVersion '25.0.3'
+  compileSdkVersion versions.androidSdk
+  buildToolsVersion versions.androidBuildTools
 
   defaultConfig {
     applicationId 'com.serjltt.devfest.weather'
     testInstrumentationRunner 'com.serjltt.devfest.weather.FunctionalTestRunner'
 
-    minSdkVersion 16
-    targetSdkVersion 24
+    minSdkVersion versions.androidMinSdk
+    targetSdkVersion versions.androidSdk
     versionCode 1
     versionName '1.0'
   }
 
   compileOptions {
-    sourceCompatibility JavaVersion.VERSION_1_8
-    targetCompatibility JavaVersion.VERSION_1_8
+    sourceCompatibility JavaVersion.VERSION_1_7
+    targetCompatibility JavaVersion.VERSION_1_7
   }
 
   packagingOptions {
@@ -61,71 +55,55 @@ android {
 
 dependencies {
   // We need some android support stuff
-  def supportVersion = '24.2.1'
-  compile "com.android.support:support-v4:${supportVersion}"
-  compile "com.android.support:cardview-v7:${supportVersion}"
-  compile "com.android.support:recyclerview-v7:${supportVersion}"
-  compile "com.android.support:appcompat-v7:${supportVersion}"
-  compile "com.android.support:design:${supportVersion}"
+  compile libraries.supportV4
+  compile libraries.supportRecyclerView
+  compile libraries.supportAppCompat
+  compile libraries.supportDesign
 
   // Some reactive view handling
-  def rxBindingVersion = '0.4.0'
-  compile "com.jakewharton.rxbinding:rxbinding:${rxBindingVersion}"
-  compile "com.jakewharton.rxbinding:rxbinding-appcompat-v7:${rxBindingVersion}"
+  compile libraries.rxBindingKotlin
+  compile libraries.rxBindingAppCompatKotlin
 
   compile 'com.github.pedrovgs:renderers:3.0.0'
 
   // Some DI for code beauty
-  def daggerVersion = '2.7'
-  compile "com.google.dagger:dagger:$daggerVersion"
-  apt "com.google.dagger:dagger-compiler:$daggerVersion"
-  testApt "com.google.dagger:dagger-compiler:$daggerVersion"
-  androidTestApt "com.google.dagger:dagger-compiler:$daggerVersion"
-  provided 'org.glassfish:javax.annotation:10.0-b28'
+  compile libraries.dagger
+  kapt libraries.daggerCompiler
+  kaptTest libraries.daggerCompiler
+  kaptAndroidTest libraries.daggerCompiler
 
   // Some butterknife for view binding
-  def butterknifeVersion = '8.4.0'
-  compile "com.jakewharton:butterknife:$butterknifeVersion"
-  apt "com.jakewharton:butterknife-compiler:$butterknifeVersion"
+  compile libraries.butterknife
+  kapt libraries.butterknifeCompiler
 
   // Some reactive streams to make kittens happy
-  compile 'io.reactivex.rxjava2:rxjava:2.0.0-RC4'
-  compile 'io.reactivex.rxjava2:rxandroid:2.0.0-RC1'
-  compile 'com.f2prateek.rx.preferences:rx-preferences:1.0.2'
-  compile "com.github.akarnokd:rxjava2-interop:0.4.1"
+  compile libraries.rxjava
+  compile libraries.rxandroid
+  compile libraries.rxkotlin
+  compile libraries.rxpreferences
 
   // Some ok libraries
-  def okHttpVersion = '3.4.1'
-  def retrofitVersion = '2.1.0'
-  compile "com.squareup.okhttp3:okhttp:$okHttpVersion"
-  compile "com.squareup.okhttp3:logging-interceptor:$okHttpVersion"
-  compile "com.squareup.retrofit2:retrofit:$retrofitVersion"
-  compile 'com.jakewharton.retrofit:retrofit2-rxjava2-adapter:1.0.0-RC3'
-  compile "com.squareup.retrofit2:converter-moshi:$retrofitVersion"
-  compile 'com.squareup.moshi:moshi:1.2.0'
-  compile 'com.squareup.okio:okio:1.9.0'
-  compile 'com.serjltt.moshi:moshi-lazy-adapters:1.0'
-
-  // This version of retrolambda generates less methods
-  retrolambdaConfig 'net.orfjackal.retrolambda:retrolambda:2.3.0'
+  compile libraries.okhttp
+  compile libraries.okhttpLoggingInterceptor
+  compile libraries.retrofit
+  compile libraries.retorfitRx2Adapter
+  compile libraries.retrofitMoshiConverter
+  compile libraries.moshi
+  compile libraries.moshiLazyAdapters
 
   // Make unit testing simpler
-  testCompile 'org.robolectric:robolectric:3.1'
-  testCompile 'junit:junit:4.12'
-  testCompile 'org.assertj:assertj-core:3.3.0'
-  testCompile 'org.mockito:mockito-all:1.10.19'
-  testCompile "com.squareup.okhttp3:mockwebserver:$okHttpVersion"
+  testCompile 'org.robolectric:robolectric:3.3.2'
+  testCompile libraries.junit
+  testCompile libraries.assertJ
+  testCompile libraries.mockito
+  testCompile libraries.okhttpMockServer
 
   // Some ui testing libs
   // Btw, I "love" how espresso and the support tests libs are packaged (why nobody uses 'provide'?)
-
-  def espressoVersion = '2.2.2'
-  def supportTestRunnerVersion = '0.5'
-
-  def uiTestLibs = ["com.android.support.test.espresso:espresso-core:$espressoVersion",
-                    "com.android.support.test.espresso:espresso-contrib:$espressoVersion",
-                    "com.android.support.test:runner:$supportTestRunnerVersion",
-                    "com.android.support.test:rules:$supportTestRunnerVersion"]
+  def uiTestLibs = [libraries.espresso,
+                    libraries.espressoContrib,
+                    libraries.supportTestRunner,
+                    libraries.supportTestRules]
 
   uiTestLibs.each {
     // 'it' means lib, not the dancing clown :)
@@ -137,5 +115,12 @@ dependencies {
 
   // Since the tests are going to be more functional then end to end,
   // we are going to mock the backend as we do in unit tests.
-  androidTestCompile "com.squareup.okhttp3:mockwebserver:$okHttpVersion"
+  androidTestCompile libraries.okhttpMockServer
+}
+
+idea {
+  module {
+    downloadJavadoc = true
+    downloadSources = true
+  }
 }

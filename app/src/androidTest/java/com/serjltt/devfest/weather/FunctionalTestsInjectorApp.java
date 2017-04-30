@@ -17,7 +17,7 @@ public final class FunctionalTestsInjectorApp extends InjectorApp {
   @Override protected Injector buildInjector() {
     // We need the reference for tests.
     TestNetworkModule networkModule = new TestNetworkModule(HttpUrl.parse("http://localhost/"));
-    urlSwappingInterceptor = networkModule.urlSwappingInterceptor;
+    urlSwappingInterceptor = networkModule.getUrlSwappingInterceptor();
 
     return DaggerInjector.builder()
         .platformModule(new PlatformModule(this))
