@@ -10,6 +10,7 @@ import org.junit.rules.TestRule
 import org.junit.runner.Description
 import org.junit.runners.model.Statement
 import retrofit2.Retrofit
+import kotlin.reflect.KClass
 
 
 class NetworkTestRule(
@@ -47,6 +48,6 @@ class NetworkTestRule(
     block.invoke(NetworkModule(mockWebServer.url("/")))
   }
 
-  fun <T : Any> create(service: Class<T>) = retrofit.create(service)
+  fun <T : Any> create(service: KClass<T>): T = retrofit.create(service.java)
   fun enqueue(response: MockResponse) = mockWebServer.enqueue(response)
 }
