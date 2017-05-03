@@ -1,7 +1,6 @@
 package com.serjltt.devfest.weather.show.forecast.model
 
 import android.os.Parcelable
-import com.serjltt.devfest.weather.show.forecast.ForecastMvp
 import java.io.Serializable
 
 /**
@@ -10,15 +9,10 @@ import java.io.Serializable
  *
  *
  * **DISCLAIMER: ** Implements [Serializable] for convenience, normally it would be
- * [Parcelable] which delegation of the whole boilerplate to AutoValue.
+ * [Parcelable] with delegation of the whole boilerplate to AutoValue.
  */
-data class ForecastModel(
-    private val date: String,
-    private val low: String,
-    private val high: String)
-  : ForecastMvp.Model, Serializable {
-
-  override fun date(): String = date
-  override fun lowestTemperature(): String = low
-  override fun highestTemperature(): String = high
+sealed class ForecastModel : Serializable {
+  data class Success(val data: List<ForecastData>) : ForecastModel()
+  data class Error(val throwable: Throwable) : ForecastModel()
+  object Progress : ForecastModel()
 }

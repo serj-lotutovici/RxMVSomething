@@ -8,9 +8,9 @@ import butterknife.BindView
 import butterknife.ButterKnife
 import com.pedrogomez.renderers.Renderer
 import com.serjltt.devfest.weather.R
-import com.serjltt.devfest.weather.show.forecast.ForecastMvp
+import com.serjltt.devfest.weather.show.forecast.model.ForecastData
 
-internal class ModelRenderer : Renderer<ForecastMvp.Model>() {
+internal class ModelRenderer : Renderer<ForecastData>() {
   @BindView(R.id.item_date) lateinit var dateView: TextView
   @BindView(R.id.item_low) lateinit var lowView: TextView
   @BindView(R.id.item_high) lateinit var highView: TextView
@@ -22,9 +22,9 @@ internal class ModelRenderer : Renderer<ForecastMvp.Model>() {
 
   override fun render() {
     val model = content
-    dateView.text = model.date()
-    lowView.text = model.lowestTemperature()
-    highView.text = model.highestTemperature()
+    dateView.text = model.date
+    lowView.text = model.low
+    highView.text = model.high
   }
 
   override fun setUpView(rootView: View) = Unit

@@ -9,7 +9,6 @@ import android.view.View
 import android.widget.ProgressBar
 import android.widget.TextView
 import butterknife.BindView
-import butterknife.ButterKnife
 import butterknife.OnClick
 import butterknife.Unbinder
 import com.f2prateek.rx.preferences2.Preference
@@ -21,6 +20,8 @@ import com.serjltt.devfest.weather.di.Injector
 import com.serjltt.devfest.weather.di.InjectorActivity
 import com.serjltt.devfest.weather.mvp.Presenter
 import com.serjltt.devfest.weather.show.forecast.ForecastMvp
+import com.serjltt.devfest.weather.show.forecast.model.ForecastData
+import com.serjltt.devfest.weather.show.forecast.model.ForecastModel
 import io.reactivex.Observable
 import io.reactivex.disposables.Disposable
 import javax.inject.Inject
@@ -34,7 +35,7 @@ class ForecastActivity : InjectorActivity(), ForecastMvp.View {
   @Inject lateinit var presenter: Presenter<ForecastMvp.View>
   @Inject lateinit var cityNamePref: Preference<String>
 
-  lateinit var adapter: RVRendererAdapter<ForecastMvp.Model>
+  lateinit var adapter: RVRendererAdapter<ForecastData>
   lateinit var disposable: Disposable
   lateinit var unbinder: Unbinder
 
@@ -44,15 +45,14 @@ class ForecastActivity : InjectorActivity(), ForecastMvp.View {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContentView(R.layout.activity_forecast)
-    unbinder = ButterKnife.bind(this)
+    setContentView(R.layout.activity_forecast).also { ForecastActivity_ViewBinding(this) }
 
     setSupportActionBar(toolbarView)
     setCity(cityNamePref.get())
 
-    val rendererBuilder = RendererBuilder<ForecastMvp.Model>(ModelRenderer())
-    adapter = RVRendererAdapter<ForecastMvp.Model>(rendererBuilder,
-        ListAdapteeCollection<ForecastMvp.Model>())
+    val rendererBuilder = RendererBuilder<ForecastData>(ModelRenderer())
+    adapter = RVRendererAdapter<ForecastData>(rendererBuilder,
+        ListAdapteeCollection<ForecastData>())
     recyclerView.layoutManager = LinearLayoutManager(this)
     recyclerView.adapter = adapter
 
@@ -65,28 +65,22 @@ class ForecastActivity : InjectorActivity(), ForecastMvp.View {
     super.onDestroy()
   }
 
-  override fun showLoading() {
-    progressView.visibility = View.VISIBLE
-    errorView.visibility = View.GONE
-  }
-
-  override fun hideLoading() {
-    progressView.visibility = View.GONE
-  }
-
-  override fun showError(error: String?) {
-    errorView.visibility = View.VISIBLE
-    errorView.text = error
-  }
-
-  override fun showForecast(data: List<ForecastMvp.Model>) {
-    adapter.clear()
-    adapter.addAll(data)
-    adapter.notifyDataSetChanged()
-  }
-
   override fun cityName(): Observable<String> {
     return cityNamePref.asObservable().share()
+  }
+
+  override fun updateView(model: ForecastModel) {
+    when (model) {
+      is ForecastModel.Progress -> showLoading()
+      is ForecastModel.Error -> {
+        hideLoading()
+        showError(model.throwable.message)
+      }
+      is ForecastModel.Success -> {
+        hideLoading()
+        showForecast(model.data)
+      }
+    }
   }
 
   @OnClick(R.id.forecast_fab) internal fun showChangeCityDialog() {
@@ -97,7 +91,27 @@ class ForecastActivity : InjectorActivity(), ForecastMvp.View {
     }.create().show()
   }
 
-  internal fun setCity(name: String) {
+  private fun showLoading() {
+    progressView.visibility = View.VISIBLE
+    errorView.visibility = View.GONE
+  }
+
+  private fun hideLoading() {
+    progressView.visibility = View.GONE
+  }
+
+  private fun showError(error: String?) {
+    errorView.visibility = View.VISIBLE
+    errorView.text = error
+  }
+
+  private fun showForecast(data: List<ForecastData>) {
+    adapter.clear()
+    adapter.addAll(data)
+    adapter.notifyDataSetChanged()
+  }
+
+  private fun setCity(name: String) {
     supportActionBar!!.title = getString(R.string.screen_name, name)
   }
 
