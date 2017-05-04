@@ -22,7 +22,7 @@ import com.serjltt.devfest.weather.di.Injector
 import com.serjltt.devfest.weather.di.InjectorActivity
 import com.serjltt.devfest.weather.mvp.Presenter
 import com.serjltt.devfest.weather.show.forecast.ForecastData
-import com.serjltt.devfest.weather.show.forecast.ForecastModel
+import com.serjltt.devfest.weather.show.forecast.ForecastUiModel
 import com.serjltt.devfest.weather.show.forecast.ForecastModule
 import com.serjltt.devfest.weather.show.forecast.ForecastView
 import io.reactivex.Observable
@@ -70,14 +70,14 @@ class ForecastActivity : InjectorActivity(), ForecastView {
 
   override fun selectCity(): Observable<Unit> = selectCityView.clicks()
 
-  override fun updateView(model: ForecastModel) {
+  override fun updateView(model: ForecastUiModel) {
     when (model) {
-      is ForecastModel.Progress -> showLoading()
-      is ForecastModel.Error -> {
+      is ForecastUiModel.Progress -> showLoading()
+      is ForecastUiModel.Error -> {
         hideLoading()
         showError(model.message)
       }
-      is ForecastModel.Success -> {
+      is ForecastUiModel.Success -> {
         hideLoading()
         showForecast(model)
       }
@@ -99,7 +99,7 @@ class ForecastActivity : InjectorActivity(), ForecastView {
     errorView.text = error
   }
 
-  private fun showForecast(model: ForecastModel.Success) {
+  private fun showForecast(model: ForecastUiModel.Success) {
     recyclerView.visibility = View.VISIBLE
 
     supportActionBar!!.title = getString(R.string.screen_name, model.cityName)

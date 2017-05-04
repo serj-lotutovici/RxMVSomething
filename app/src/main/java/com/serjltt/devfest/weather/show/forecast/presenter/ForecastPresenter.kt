@@ -2,9 +2,7 @@ package com.serjltt.devfest.weather.show.forecast.presenter
 
 import com.f2prateek.rx.preferences2.Preference
 import com.serjltt.devfest.weather.mvp.Presenter
-import com.serjltt.devfest.weather.rx.toObservable
-import com.serjltt.devfest.weather.rx.zipWithAsPair
-import com.serjltt.devfest.weather.show.forecast.ForecastModel
+import com.serjltt.devfest.weather.show.forecast.ForecastUiModel
 import com.serjltt.devfest.weather.show.forecast.ForecastView
 import com.serjltt.devfest.weather.show.forecast.usecase.GetForecastResult
 import com.serjltt.devfest.weather.show.forecast.usecase.GetForecastUseCase
@@ -27,14 +25,14 @@ class ForecastPresenter @Inject internal constructor(
 
     disposables += cityNamePref.asObservable()
         .flatMap { cityName ->
-          cityName.toObservable().zipWithAsPair(getForecastUseCase.getForecast(cityName))
-        }
-        .map { (cityName, result) ->
-          when (result) {
-            is GetForecastResult.Success -> ForecastModel.Success(cityName, result.data)
-            is GetForecastResult.Error -> ForecastModel.Error(result.msg)
-            is GetForecastResult.Progress -> ForecastModel.Progress
-          }
+          getForecastUseCase.getForecast(cityName)
+              .map { result ->
+                when (result) {
+                  is GetForecastResult.Success -> ForecastUiModel.Success(cityName, result.data)
+                  is GetForecastResult.Error -> ForecastUiModel.Error(result.msg)
+                  is GetForecastResult.Progress -> ForecastUiModel.Progress
+                }
+              }
         }
         .subscribeBy({ view.updateView(it) })
 

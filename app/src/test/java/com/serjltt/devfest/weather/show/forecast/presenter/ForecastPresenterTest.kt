@@ -8,7 +8,7 @@ import com.serjltt.devfest.weather.mvp.Presenter
 import com.serjltt.devfest.weather.rx.StubPreference
 import com.serjltt.devfest.weather.rx.toObservable
 import com.serjltt.devfest.weather.show.forecast.ForecastData
-import com.serjltt.devfest.weather.show.forecast.ForecastModel
+import com.serjltt.devfest.weather.show.forecast.ForecastUiModel
 import com.serjltt.devfest.weather.show.forecast.ForecastView
 import com.serjltt.devfest.weather.show.forecast.usecase.GetForecastResult
 import com.serjltt.devfest.weather.show.forecast.usecase.GetForecastUseCase
@@ -51,20 +51,26 @@ class ForecastPresenterTest {
     presenter.bind(view)
     cityPreference.set("test1")
 
-    view.assertCalled(1).updateView(ForecastModel.Error("Error"))
+    view.assertCalled(1).updateView(ForecastUiModel.Error("Error"))
   }
 
   @Test fun `Presenter propagates success model`() {
     val forecastData = listOf(ForecastData("date", "low", "high"))
     val success = GetForecastResult.Success(forecastData)
-    getForecastUseCase.getForecast(anyString()).mockReturn(success.toObservable())
+
+    val forecastSubject: BehaviorSubject<GetForecastResult> = BehaviorSubject.create()
+    getForecastUseCase.getForecast(anyString()).mockReturn(forecastSubject)
 
     presenter.bind(view)
-    cityPreference.set("test1")
-    cityPreference.set("test2")
 
-    view.assertCalled(1).updateView(ForecastModel.Success("test1", forecastData))
-    view.assertCalled(1).updateView(ForecastModel.Success("test2", forecastData))
+    cityPreference.set("test1")
+    forecastSubject.onNext(GetForecastResult.Progress)
+    forecastSubject.onNext(success)
+    view.assertCalled(1).updateView(ForecastUiModel.Progress)
+    view.assertCalled(1).updateView(ForecastUiModel.Success("test1", forecastData))
+
+    cityPreference.set("test2")
+    view.assertCalled(1).updateView(ForecastUiModel.Success("test2", forecastData))
   }
 
   @Test fun `Presenter reacts to click events`() {
@@ -82,7 +88,7 @@ class ForecastPresenterTest {
     selectCityUseCase.selectCity().mockReturn(SelectCityResult.NewCity("test").toSingle())
     clickSubject.onNext(Unit)
     testCityObservable.assertValue("test")
-    view.assertCalled(1).updateView(ForecastModel.Progress)
+    view.assertCalled(1).updateView(ForecastUiModel.Progress)
   }
 
   @Test fun `Presenter does not propagate when disposed`() {

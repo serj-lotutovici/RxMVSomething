@@ -61,7 +61,7 @@ open class NetworkModule(internal val endpoint: HttpUrl) {
         val response = chain.proceed(chain.request())
         // re-write response header to force use of cache
         val cacheControl = CacheControl.Builder()
-            .maxAge(1, TimeUnit.MINUTES)
+            .maxAge(30, TimeUnit.SECONDS)
             .build()
 
         response.newBuilder()
