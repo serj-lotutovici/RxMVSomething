@@ -5,11 +5,16 @@ import com.serjltt.devfest.weather.assertCalled
 import com.serjltt.devfest.weather.assertNeverCalled
 import com.serjltt.devfest.weather.mockReturn
 import com.serjltt.devfest.weather.mvp.Presenter
-import com.serjltt.devfest.weather.show.forecast.ForecastMvp
-import com.serjltt.devfest.weather.show.forecast.model.ForecastData
-import com.serjltt.devfest.weather.show.forecast.model.ForecastModel
+import com.serjltt.devfest.weather.rx.StubPreference
+import com.serjltt.devfest.weather.rx.toObservable
+import com.serjltt.devfest.weather.show.forecast.ForecastData
+import com.serjltt.devfest.weather.show.forecast.ForecastModel
+import com.serjltt.devfest.weather.show.forecast.ForecastView
+import com.serjltt.devfest.weather.show.forecast.usecase.GetForecastResult
 import com.serjltt.devfest.weather.show.forecast.usecase.GetForecastUseCase
-import com.serjltt.devfest.weather.toJustObservable
+import com.serjltt.devfest.weather.show.forecast.usecase.SelectCityResult
+import com.serjltt.devfest.weather.show.forecast.usecase.SelectCityUseCase
+import io.reactivex.rxkotlin.toSingle
 import io.reactivex.subjects.BehaviorSubject
 import org.junit.Before
 import org.junit.Rule
@@ -19,57 +24,74 @@ import org.mockito.Mock
 import org.mockito.junit.MockitoJUnit
 import org.mockito.junit.MockitoRule
 
+@Suppress("IllegalIdentifier")
 class ForecastPresenterTest {
   @Suppress("unused")
   @get:Rule val mockitoRule: MockitoRule = MockitoJUnit.rule()
 
-  @Mock lateinit var useCase: GetForecastUseCase
-  @Mock lateinit var view: ForecastMvp.View
+  @Mock lateinit var getForecastUseCase: GetForecastUseCase
+  @Mock lateinit var selectCityUseCase: SelectCityUseCase
+  @Mock lateinit var view: ForecastView
 
-  private val subject: BehaviorSubject<String> = BehaviorSubject.create<String>()
+  private val clickSubject: BehaviorSubject<Unit> = BehaviorSubject.create()
+  private val cityPreference = StubPreference<String>()
 
-  private lateinit var presenter: Presenter<ForecastMvp.View>
+  private lateinit var presenter: Presenter<ForecastView>
 
-  @Before @Throws(Exception::class)
-  fun setUp() {
-    view.cityName().mockReturn(subject)
+  @Before fun setUp() {
+    view.selectCity().mockReturn(clickSubject)
 
-    presenter = ForecastPresenter(useCase)
+    presenter = ForecastPresenter(cityPreference, getForecastUseCase, selectCityUseCase)
   }
 
-  @Test fun propagatesError() {
-    val error = ForecastModel.Error(Exception("Error"))
-    useCase.getForecast(anyString()).mockReturn(error.toJustObservable())
+  @Test fun `Presenter propagates error model`() {
+    val error = GetForecastResult.Error("Error")
+    getForecastUseCase.getForecast(anyString()).mockReturn(error.toObservable())
 
     presenter.bind(view)
-    triggerEvent("test")
+    cityPreference.set("test1")
 
-    view.assertCalled(1).updateView(error)
+    view.assertCalled(1).updateView(ForecastModel.Error("Error"))
   }
 
-  @Test fun propagatesSuccess() {
-    val oneForecast = ForecastData("date", "low", "high")
-    val success = ForecastModel.Success(listOf(oneForecast))
-    useCase.getForecast(anyString()).mockReturn(success.toJustObservable())
+  @Test fun `Presenter propagates success model`() {
+    val forecastData = listOf(ForecastData("date", "low", "high"))
+    val success = GetForecastResult.Success(forecastData)
+    getForecastUseCase.getForecast(anyString()).mockReturn(success.toObservable())
 
     presenter.bind(view)
-    triggerEvent("test1")
-    triggerEvent("test2")
+    cityPreference.set("test1")
+    cityPreference.set("test2")
 
-    view.assertCalled(2).updateView(success)
+    view.assertCalled(1).updateView(ForecastModel.Success("test1", forecastData))
+    view.assertCalled(1).updateView(ForecastModel.Success("test2", forecastData))
   }
 
-  @Test fun doesNotPropagateIfUnsubscribed() {
-    useCase.getForecast(anyString())
-        .mockReturn(ForecastModel.Success(emptyList()).toJustObservable())
+  @Test fun `Presenter reacts to click events`() {
+    val testCityObservable = cityPreference.asObservable().test()
+
+    presenter.bind(view)
+    view.assertNeverCalled().updateView(any())
+
+    selectCityUseCase.selectCity().mockReturn(SelectCityResult.Canceled.toSingle())
+    clickSubject.onNext(Unit)
+    testCityObservable.assertNoValues()
+
+    getForecastUseCase.getForecast(anyString())
+        .mockReturn(GetForecastResult.Progress.toObservable())
+    selectCityUseCase.selectCity().mockReturn(SelectCityResult.NewCity("test").toSingle())
+    clickSubject.onNext(Unit)
+    testCityObservable.assertValue("test")
+    view.assertCalled(1).updateView(ForecastModel.Progress)
+  }
+
+  @Test fun `Presenter does not propagate when disposed`() {
+    getForecastUseCase.getForecast(anyString())
+        .mockReturn(GetForecastResult.Success(emptyList()).toObservable())
 
     presenter.bind(view).dispose()
-    triggerEvent("test1")
+    cityPreference.set("test1")
 
     view.assertNeverCalled().updateView(any())
-  }
-
-  private fun triggerEvent(value: String) {
-    subject.onNext(value)
   }
 }

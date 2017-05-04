@@ -5,8 +5,7 @@ import com.serjltt.devfest.weather.data.WeatherService
 import com.serjltt.devfest.weather.data.network.NetworkTestRule
 import com.serjltt.devfest.weather.fromResource
 import com.serjltt.devfest.weather.rx.ImmediateTestScheduler
-import com.serjltt.devfest.weather.show.forecast.model.ForecastData
-import com.serjltt.devfest.weather.show.forecast.model.ForecastModel
+import com.serjltt.devfest.weather.show.forecast.ForecastData
 import okhttp3.mockwebserver.MockResponse
 import org.assertj.core.api.Java6Assertions.assertThat
 import org.junit.Before
@@ -33,8 +32,8 @@ class GetForecastUseCaseTest {
         .assertValueCount(2)
         .values()
 
-    assertThat(values.first()).isEqualTo(ForecastModel.Progress)
-    values.last().cast<ForecastModel.Success>().let { (data) ->
+    assertThat(values.first()).isEqualTo(GetForecastResult.Progress)
+    values.last().cast<GetForecastResult.Success>().let { (data) ->
       assertThat(data).hasSize(10)
       assertThat(data[9])
           .isEqualToComparingFieldByField(ForecastData("08 Aug 2016", "59", "70"))
@@ -50,9 +49,9 @@ class GetForecastUseCaseTest {
         .assertValueCount(2)
         .values()
 
-    assertThat(values.first()).isEqualTo(ForecastModel.Progress)
-    values.last().cast<ForecastModel.Error>().let { (throwable) ->
-      assertThat(throwable).hasMessage("HTTP 400 Client Error")
+    assertThat(values.first()).isEqualTo(GetForecastResult.Progress)
+    values.last().cast<GetForecastResult.Error>().let { (message) ->
+      assertThat(message).isEqualTo("HTTP 400 Client Error")
     }
   }
 }

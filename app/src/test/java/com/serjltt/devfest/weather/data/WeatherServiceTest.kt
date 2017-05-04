@@ -11,6 +11,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
+@Suppress("IllegalIdentifier")
 class WeatherServiceTest {
   @get:Rule var testRule = NetworkTestRule()
 
@@ -20,7 +21,7 @@ class WeatherServiceTest {
     weatherService = testRule.create(WeatherService::class)
   }
 
-  @Test fun serviceReturnsExpectedData() {
+  @Test fun `Service success case is a ForecastPacket`() {
     testRule.enqueue(MockResponse().setBody(fromResource("yahoo_response.json")))
 
     val (title, units, astronomy, forecast) = weatherService.getForecast("q", "f", "e")

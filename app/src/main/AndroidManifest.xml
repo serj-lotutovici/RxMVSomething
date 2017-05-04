@@ -13,7 +13,7 @@
       android:theme="@style/AppTheme"
       tools:ignore="AllowBackup,GoogleAppIndexingWarning">
 
-    <activity android:name="com.serjltt.devfest.weather.show.forecast.ui.ForecastActivity">
+    <activity android:name="com.serjltt.devfest.weather.show.forecast.view.ForecastActivity">
       <intent-filter>
         <action android:name="android.intent.action.MAIN"/>
         <category android:name="android.intent.category.LAUNCHER"/>

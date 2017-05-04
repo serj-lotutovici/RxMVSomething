@@ -10,11 +10,6 @@ import javax.inject.Named
     private val ioScheduler: Scheduler,
     private val mainScheduler: Scheduler) {
 
-  interface Component {
-    @Named(IO_SCHEDULER) fun ioScheduler(): Scheduler
-    @Named(MAIN_SCHEDULER) fun mainScheduler(): Scheduler
-  }
-
   @Provides @Named(IO_SCHEDULER) internal fun provideIoScheduler() = ioScheduler
   @Provides @Named(MAIN_SCHEDULER) internal fun provideMainScheduler() = mainScheduler
 

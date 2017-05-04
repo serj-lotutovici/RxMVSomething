@@ -1,7 +1,6 @@
 package com.serjltt.devfest.weather
 
 import android.annotation.SuppressLint
-import io.reactivex.Observable
 import okio.Okio
 import org.mockito.Mockito
 import org.mockito.Mockito.*
@@ -14,9 +13,6 @@ import org.mockito.Mockito.*
     return Okio.buffer(Okio.source(`is`)).readUtf8()
   }
 }
-
-/** Wraps this value into an observable that emits and then terminates.  */
-fun <T : Any> T.toJustObservable(): Observable<T> = Observable.just(this)
 
 /** Mocks the return of a method of a mock. */
 fun <R : Any> R?.mockReturn(value: R?): Unit {

@@ -2,8 +2,7 @@ package com.serjltt.devfest.weather.show.forecast.usecase
 
 import com.serjltt.devfest.weather.data.WeatherService
 import com.serjltt.devfest.weather.rx.RxModule
-import com.serjltt.devfest.weather.show.forecast.model.ForecastData
-import com.serjltt.devfest.weather.show.forecast.model.ForecastModel
+import com.serjltt.devfest.weather.show.forecast.ForecastData
 import io.reactivex.Observable
 import io.reactivex.Scheduler
 import io.reactivex.rxkotlin.toObservable
@@ -11,7 +10,7 @@ import javax.inject.Inject
 import javax.inject.Named
 
 interface GetForecastUseCase {
-  fun getForecast(city: String): Observable<ForecastModel>
+  fun getForecast(city: String): Observable<GetForecastResult>
 }
 
 /**
@@ -23,17 +22,19 @@ internal class GetForecastUseCaseImpl @Inject internal constructor(
     @param:Named(RxModule.MAIN_SCHEDULER) private val mainThreadScheduler: Scheduler)
   : GetForecastUseCase {
 
-  override fun getForecast(city: String): Observable<ForecastModel> {
+  override fun getForecast(city: String): Observable<GetForecastResult> {
     return weatherService.getForecast(querySelect(city), QUERY_FORMAT, QUERY_ENV)
-        .flatMapSingle<ForecastModel> { packet ->
+        .flatMapSingle<GetForecastResult> { packet ->
           packet.forecast.toObservable()
-              .map<ForecastData> { (_, date, _, high, low) -> ForecastData(date, low, high) }
+              .map { (_, date, _, high, low) ->
+                ForecastData(date, low, high)
+              }
               .toList()
-              .map { data -> ForecastModel.Success(data) }
+              .map { data -> GetForecastResult.Success(data) }
         }
-        .onErrorReturn { th -> ForecastModel.Error(th) }
+        .onErrorReturn { th -> GetForecastResult.Error(th.message) }
         .observeOn(mainThreadScheduler)
-        .startWith(ForecastModel.Progress)
+        .startWith(GetForecastResult.Progress)
   }
 
   private companion object {
@@ -46,4 +47,11 @@ internal class GetForecastUseCaseImpl @Inject internal constructor(
     const val QUERY_FORMAT = "json"
     const val QUERY_ENV = "store://datatables.org/alltableswithkeys"
   }
+}
+
+/** Result contract specific to [GetForecastUseCase]. */
+sealed class GetForecastResult {
+  data class Success(val data: List<ForecastData>) : GetForecastResult()
+  data class Error(val msg: String?) : GetForecastResult()
+  object Progress : GetForecastResult()
 }

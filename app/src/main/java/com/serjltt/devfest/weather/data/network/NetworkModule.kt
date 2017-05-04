@@ -23,10 +23,6 @@ import javax.inject.Named
 
 @Global @Module(includes = arrayOf(JsonModule::class))
 open class NetworkModule(internal val endpoint: HttpUrl) {
-  interface Component {
-    fun deviceNetwork(): DeviceNetwork
-  }
-
   @Provides internal fun provideRetrofit(client: OkHttpClient, moshi: Moshi,
       @Named(RxModule.IO_SCHEDULER) ioScheduler: Scheduler): Retrofit {
     return Retrofit.Builder()

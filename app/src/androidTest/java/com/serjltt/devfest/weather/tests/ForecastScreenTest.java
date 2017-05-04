@@ -5,7 +5,7 @@ import android.support.test.runner.AndroidJUnit4;
 import com.serjltt.devfest.weather.TestHelper;
 import com.serjltt.devfest.weather.robots.ForecastScreenRobot;
 import com.serjltt.devfest.weather.rules.MockWebServerRule;
-import com.serjltt.devfest.weather.show.forecast.ui.ForecastActivity;
+import com.serjltt.devfest.weather.show.forecast.view.ForecastActivity;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.Before;
