@@ -6,6 +6,7 @@ import okhttp3.Cache
 import okhttp3.OkHttpClient
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
+import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.Description
 import org.junit.runners.model.Statement
@@ -22,27 +23,29 @@ class NetworkTestRule(
   private val jsonTestRule = JsonTestRule()
   private val mockWebServer = MockWebServer()
 
+  private val ruleChain: RuleChain = RuleChain.outerRule(mockWebServer)
+      .around(jsonTestRule)
+
   private lateinit var client: OkHttpClient
   private lateinit var retrofit: Retrofit
 
-  override fun apply(base: Statement, description: Description) =
-      jsonTestRule.apply(
-          mockWebServer.apply(object : Statement() {
-            override fun evaluate() {
-              setupNetwork { module ->
-                client = module.provideOkHttpClient(
-                    cache = cache,
-                    loggingInterceptor = module.provideLoggingInterceptor(),
-                    cacheInterceptor = module.provideCacheInterceptor(),
-                    offlineCacheInterceptor = module.provideOfflineCacheInterceptor(deviceNetwork)
-                )
-                retrofit = module.provideRetrofit(client, jsonTestRule.moshi, ioScheduler)
-              }
+  override fun apply(base: Statement, description: Description): Statement =
+      ruleChain.apply(object : Statement() {
+        override fun evaluate() {
+          setupNetwork { module ->
+            client = module.provideOkHttpClient(
+                cache = cache,
+                loggingInterceptor = module.provideLoggingInterceptor(),
+                cacheInterceptor = module.provideCacheInterceptor(),
+                offlineCacheInterceptor = module.provideOfflineCacheInterceptor(deviceNetwork)
+            )
+            retrofit = module.provideRetrofit(client, jsonTestRule.moshi, ioScheduler)
+          }
 
-              base.evaluate()
-            }
-          }, description),
-          description)
+          base.evaluate()
+        }
+      }, description)
+
 
   private inline fun setupNetwork(block: (NetworkModule) -> Unit) {
     block.invoke(NetworkModule(mockWebServer.url("/")))

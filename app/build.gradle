@@ -92,7 +92,6 @@ dependencies {
   compile libraries.moshiLazyAdapters
 
   // Make unit testing simpler
-  testCompile 'org.robolectric:robolectric:3.3.2'
   testCompile libraries.junit
   testCompile libraries.assertJ
   testCompile libraries.mockito

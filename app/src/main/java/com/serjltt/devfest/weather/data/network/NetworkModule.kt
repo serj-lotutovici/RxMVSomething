@@ -23,32 +23,31 @@ import javax.inject.Named
 
 @Global @Module(includes = arrayOf(JsonModule::class))
 open class NetworkModule(internal val endpoint: HttpUrl) {
-  @Provides internal fun provideRetrofit(client: OkHttpClient, moshi: Moshi,
-      @Named(RxModule.IO_SCHEDULER) ioScheduler: Scheduler): Retrofit {
-    return Retrofit.Builder()
-        .addCallAdapterFactory(RxJava2CallAdapterFactory.createWithScheduler(ioScheduler))
-        .addConverterFactory(MoshiConverterFactory.create(moshi))
-        .client(client)
-        .baseUrl(endpoint)
-        .build()
-  }
+  @Global @Provides internal fun provideRetrofit(client: OkHttpClient, moshi: Moshi,
+      @Named(RxModule.IO_SCHEDULER) ioScheduler: Scheduler): Retrofit =
+      Retrofit.Builder()
+          .addCallAdapterFactory(RxJava2CallAdapterFactory.createWithScheduler(ioScheduler))
+          .addConverterFactory(MoshiConverterFactory.create(moshi))
+          .client(client)
+          .baseUrl(endpoint)
+          .build()
 
-  @Provides internal fun provideOkHttpClient(cache: Cache?,
+  @Global @Provides internal fun provideOkHttpClient(cache: Cache?,
       @Named(NAME_LOGGING) loggingInterceptor: Interceptor,
       @Named(NAME_CACHE) cacheInterceptor: Interceptor,
-      @Named(NAME_OFFLINE_CACHE) offlineCacheInterceptor: Interceptor): OkHttpClient {
-    return OkHttpClient.Builder()
-        .cache(cache)
-        .addInterceptor(loggingInterceptor)
-        .addInterceptor(offlineCacheInterceptor)
-        .addNetworkInterceptor(cacheInterceptor)
-        .build()
-  }
+      @Named(NAME_OFFLINE_CACHE) offlineCacheInterceptor: Interceptor): OkHttpClient =
+      OkHttpClient.Builder()
+          .cache(cache)
+          .addInterceptor(loggingInterceptor)
+          .addInterceptor(offlineCacheInterceptor)
+          .addNetworkInterceptor(cacheInterceptor)
+          .build()
 
-  @Provides internal fun provideCache(context: Context): Cache =
+  @Global @Provides internal fun provideCache(context: Context): Cache =
       Cache(File(context.cacheDir, "http-cache"), HTTP_CACHE_SIZE.toLong())
 
-  @Provides @Named(NAME_LOGGING) internal open fun provideLoggingInterceptor(): Interceptor =
+  @Global @Provides @Named(NAME_LOGGING) internal open fun provideLoggingInterceptor()
+      : Interceptor =
       HttpLoggingInterceptor().apply {
         level = if (BuildConfig.DEBUG) {
           HttpLoggingInterceptor.Level.BODY
@@ -57,37 +56,35 @@ open class NetworkModule(internal val endpoint: HttpUrl) {
         }
       }
 
-  @Provides @Named(NAME_CACHE) internal open fun provideCacheInterceptor(): Interceptor {
-    return Interceptor { chain ->
-      val response = chain.proceed(chain.request())
-      // re-write response header to force use of cache
-      val cacheControl = CacheControl.Builder()
-          .maxAge(1, TimeUnit.MINUTES)
-          .build()
+  @Global @Provides @Named(NAME_CACHE) internal open fun provideCacheInterceptor(): Interceptor =
+      Interceptor { chain ->
+        val response = chain.proceed(chain.request())
+        // re-write response header to force use of cache
+        val cacheControl = CacheControl.Builder()
+            .maxAge(1, TimeUnit.MINUTES)
+            .build()
 
-      response.newBuilder()
-          .header(HEADER_CACHE_CONTROL, cacheControl.toString())
-          .build()
-    }
-  }
-
-  @Provides @Named(NAME_OFFLINE_CACHE) internal open fun provideOfflineCacheInterceptor(
-      deviceNetwork: DeviceNetwork): Interceptor {
-    return Interceptor { chain ->
-      var request = chain.request()
-      if (!deviceNetwork.isNetworkAvailable()) {
-        // If no network is available we use the before returned
-        // response which is not older than 7 days.
-        val cacheControl = CacheControl.Builder().maxStale(1, TimeUnit.HOURS).build()
-        request = request.newBuilder().cacheControl(cacheControl).build()
+        response.newBuilder()
+            .header(HEADER_CACHE_CONTROL, cacheControl.toString())
+            .build()
       }
-      chain.proceed(request)
-    }
-  }
 
-  @Provides internal fun provideNetwork(context: Context): DeviceNetwork {
-    return RealDeviceNetwork(context)
-  }
+
+  @Global @Provides @Named(NAME_OFFLINE_CACHE) internal open fun provideOfflineCacheInterceptor(
+      deviceNetwork: DeviceNetwork): Interceptor =
+      Interceptor { chain ->
+        var request = chain.request()
+        if (!deviceNetwork.isNetworkAvailable()) {
+          // If no network is available we use the before returned
+          // response which is not older than 7 days.
+          val cacheControl = CacheControl.Builder().maxStale(1, TimeUnit.HOURS).build()
+          request = request.newBuilder().cacheControl(cacheControl).build()
+        }
+        chain.proceed(request)
+      }
+
+  @Global @Provides internal fun provideNetwork(context: Context): DeviceNetwork =
+      RealDeviceNetwork(context)
 
   companion object {
     internal const val HEADER_CACHE_CONTROL = "Cache-Control"
