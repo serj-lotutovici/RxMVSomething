@@ -9,7 +9,7 @@ android {
 
   defaultConfig {
     applicationId 'com.serjltt.devfest.weather'
-    testInstrumentationRunner 'com.serjltt.devfest.weather.FunctionalTestRunner'
+    testInstrumentationRunner 'com.serjltt.devfest.weather.UIUnitTestRunner'
 
     minSdkVersion versions.androidMinSdk
     targetSdkVersion versions.androidSdk

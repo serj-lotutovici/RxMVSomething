@@ -22,8 +22,8 @@ import com.serjltt.devfest.weather.di.Injector
 import com.serjltt.devfest.weather.di.InjectorActivity
 import com.serjltt.devfest.weather.mvp.Presenter
 import com.serjltt.devfest.weather.show.forecast.ForecastData
-import com.serjltt.devfest.weather.show.forecast.ForecastUiModel
 import com.serjltt.devfest.weather.show.forecast.ForecastModule
+import com.serjltt.devfest.weather.show.forecast.ForecastUiModel
 import com.serjltt.devfest.weather.show.forecast.ForecastView
 import io.reactivex.Observable
 import io.reactivex.disposables.Disposable
@@ -71,42 +71,30 @@ class ForecastActivity : InjectorActivity(), ForecastView {
   override fun selectCity(): Observable<Unit> = selectCityView.clicks()
 
   override fun updateView(model: ForecastUiModel) {
+    updateViewVisibility(model)
     when (model) {
-      is ForecastUiModel.Progress -> showLoading()
-      is ForecastUiModel.Error -> {
-        hideLoading()
-        showError(model.message)
-      }
-      is ForecastUiModel.Success -> {
-        hideLoading()
-        showForecast(model)
-      }
+      is ForecastUiModel.Progress -> Unit
+      is ForecastUiModel.Error -> showError(model.message)
+      is ForecastUiModel.Success -> showForecast(model)
     }
   }
 
-  private fun showLoading() {
-    progressView.visibility = View.VISIBLE
-    errorView.visibility = View.GONE
-    recyclerView.visibility = View.GONE
-  }
-
-  private fun hideLoading() {
-    progressView.visibility = View.GONE
-  }
-
   private fun showError(error: String?) {
-    errorView.visibility = View.VISIBLE
     errorView.text = error
   }
 
   private fun showForecast(model: ForecastUiModel.Success) {
-    recyclerView.visibility = View.VISIBLE
-
     supportActionBar!!.title = getString(R.string.screen_name, model.cityName)
 
     adapter.clear()
     adapter.addAll(model.data)
     adapter.notifyDataSetChanged()
+  }
+
+  private fun updateViewVisibility(model: ForecastUiModel) {
+    progressView.visibility = if (model is ForecastUiModel.Progress) View.VISIBLE else View.GONE
+    errorView.visibility = if (model is ForecastUiModel.Error) View.VISIBLE else View.GONE
+    recyclerView.visibility = if (model is ForecastUiModel.Success) View.VISIBLE else View.GONE
   }
 }
 

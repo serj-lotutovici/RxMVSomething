@@ -6,9 +6,6 @@ import java.io.Serializable
 
 /**
  * Model that will be used to present the state of the [ForecastView].
- *
- * **DISCLAIMER: ** Implements [Serializable] for convenience, normally it would be
- * [Parcelable] with delegation of the whole boilerplate to AutoValue.
  */
 sealed class ForecastUiModel : Serializable {
   data class Success(val cityName: String, val data: List<ForecastData>) : ForecastUiModel()
