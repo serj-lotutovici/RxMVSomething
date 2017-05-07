@@ -22,7 +22,7 @@ import java.util.concurrent.TimeUnit
 import javax.inject.Named
 
 @Global @Module(includes = arrayOf(JsonModule::class))
-open class NetworkModule(internal val endpoint: HttpUrl) {
+class NetworkModule(internal val endpoint: HttpUrl) {
   @Global @Provides internal fun provideRetrofit(client: OkHttpClient, moshi: Moshi,
       @Named(RxModule.IO_SCHEDULER) ioScheduler: Scheduler): Retrofit =
       Retrofit.Builder()
@@ -46,7 +46,7 @@ open class NetworkModule(internal val endpoint: HttpUrl) {
   @Global @Provides internal fun provideCache(context: Context): Cache =
       Cache(File(context.cacheDir, "http-cache"), HTTP_CACHE_SIZE.toLong())
 
-  @Global @Provides @Named(NAME_LOGGING) internal open fun provideLoggingInterceptor()
+  @Global @Provides @Named(NAME_LOGGING) internal fun provideLoggingInterceptor()
       : Interceptor =
       HttpLoggingInterceptor().apply {
         level = if (BuildConfig.DEBUG) {
@@ -56,7 +56,7 @@ open class NetworkModule(internal val endpoint: HttpUrl) {
         }
       }
 
-  @Global @Provides @Named(NAME_CACHE) internal open fun provideCacheInterceptor(): Interceptor =
+  @Global @Provides @Named(NAME_CACHE) internal fun provideCacheInterceptor(): Interceptor =
       Interceptor { chain ->
         val response = chain.proceed(chain.request())
         // re-write response header to force use of cache
@@ -70,7 +70,7 @@ open class NetworkModule(internal val endpoint: HttpUrl) {
       }
 
 
-  @Global @Provides @Named(NAME_OFFLINE_CACHE) internal open fun provideOfflineCacheInterceptor(
+  @Global @Provides @Named(NAME_OFFLINE_CACHE) internal fun provideOfflineCacheInterceptor(
       deviceNetwork: DeviceNetwork): Interceptor =
       Interceptor { chain ->
         var request = chain.request()

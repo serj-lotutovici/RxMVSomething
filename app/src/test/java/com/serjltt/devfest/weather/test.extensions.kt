@@ -1,13 +1,10 @@
 package com.serjltt.devfest.weather
 
-import android.annotation.SuppressLint
 import okio.Okio
 import org.mockito.Mockito
 import org.mockito.Mockito.*
 
-// suppressing warning since all test will run under java 7 or 8
-@SuppressLint("NewApi")
-@Throws(Exception::class) fun fromResource(file: String): String {
+fun fromResource(file: String): String {
   val classLoader = Thread.currentThread().contextClassLoader
   classLoader.getResourceAsStream(file).use { `is` ->
     return Okio.buffer(Okio.source(`is`)).readUtf8()
